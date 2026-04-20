@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}NeoRifa — Acceso Usuario{% endblock %}
+
+{% block extra_head %}
+<style>
+  .auth-wrap {
+    min-height: calc(100vh - 64px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .auth-box {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeIn 0.4s ease both;
+  }
+  .auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  .auth-header .icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 1rem;
+    filter: drop-shadow(0 0 15px rgba(0,255,204,0.5));
+  }
+  .auth-header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: var(--neon-cyan);
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px var(--neon-cyan);
+  }
+  .auth-header p {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    margin-top: 0.4rem;
+  }
+  .auth-panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .auth-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+  }
+  .btn-submit {
+    width: 100%;
+    justify-content: center;
+    padding: 0.8rem;
+    font-size: 0.9rem;
+    border: 1px solid var(--neon-cyan);
+    color: var(--neon-cyan);
+    background: transparent;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-submit:hover {
+    background: rgba(0,255,204,0.08);
+    box-shadow: 0 0 25px rgba(0,255,204,0.2);
+  }
+  .back-link {
+    text-align: center;
+    margin-top: 1.2rem;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+  }
+  .back-link a { color: var(--text-dim); text-decoration: none; }
+  .back-link a:hover { color: var(--text); }
+  .field-hint {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--text-dim);
+    margin-top: 0.3rem;
+    letter-spacing: 1px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-header">
+      <span class="icon">🎟️</span>
+      <h1>INGRESAR</h1>
+      <p>reserva tu número de suerte</p>
+    </div>
+
+    <div class="auth-panel">
+      {% if error %}
+      <div class="error-msg">⚠ {{ error }}</div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('login_usuario') }}">
+        <div class="form-group">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" name="nombre" placeholder="Ej: Juan García" autocomplete="off" required>
+        </div>
+        <div class="form-group">
+          <label for="telefono">Número telefónico</label>
+          <input type="tel" id="telefono" name="telefono" placeholder="Ej: 3001234567" autocomplete="off" required>
+          <div class="field-hint">Solo dígitos — mínimo 7 caracteres</div>
+        </div>
+        <button type="submit" class="btn-submit">CONTINUAR →</button>
+      </form>
+    </div>
+
+    <div class="back-link">
+      <a href="{{ url_for('login_selector') }}">&larr; VOLVER</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
