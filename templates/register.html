@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}RifOs — Crear cuenta{% endblock %}
+{% block extra_head %}
+<style>
+.auth-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-box{width:100%;max-width:420px;animation:fadeIn .4s ease both}
+.auth-header{text-align:center;margin-bottom:2rem}
+.auth-header .icon{font-size:2.2rem;display:block;margin-bottom:.8rem}
+.auth-header h1{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:900;color:var(--neon-blue);letter-spacing:4px;text-shadow:0 0 20px var(--neon-blue)}
+.auth-header p{font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--text-dim);letter-spacing:2px;margin-top:.4rem}
+.auth-panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:2rem;position:relative;overflow:hidden}
+.auth-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--neon-blue),transparent)}
+.btn-submit{width:100%;justify-content:center;padding:.75rem;font-size:.88rem;border:1px solid var(--neon-blue);color:var(--neon-blue);background:transparent;border-radius:4px;margin-top:.3rem;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:2px}
+.btn-submit:hover{background:rgba(0,212,255,.1);box-shadow:0 0 25px rgba(0,212,255,.2)}
+.auth-footer{text-align:center;margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--text-dim);letter-spacing:1px}
+.auth-footer a{color:var(--neon-cyan);text-decoration:none}
+.auth-footer a:hover{text-decoration:underline}
+.divider{display:flex;align-items:center;gap:.8rem;margin:1.2rem 0;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:2px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-header">
+      <span class="icon">🚀</span>
+      <h1>CREAR CUENTA</h1>
+      <p>administra tus rifas gratis</p>
+    </div>
+    <div class="auth-panel">
+      {% if error %}<div class="error-msg">⚠ {{ error }}</div>{% endif %}
+      <form method="POST">
+        <div class="form-group">
+          <label>Nombre completo</label>
+          <input type="text" name="name" placeholder="Tu nombre" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" name="email" placeholder="correo@ejemplo.com" required>
+        </div>
+        <div class="form-group">
+          <label>Contraseña</label>
+          <input type="password" name="password" placeholder="Mínimo 6 caracteres" required>
+        </div>
+        <div class="form-group" style="margin-bottom:.3rem">
+          <label>Confirmar contraseña</label>
+          <input type="password" name="password2" placeholder="Repite la contraseña" required>
+        </div>
+        <button type="submit" class="btn-submit">CREAR CUENTA →</button>
+      </form>
+    </div>
+    <div class="auth-footer">
+      ¿Ya tienes cuenta? <a href="{{ url_for('login') }}">INICIA SESIÓN</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

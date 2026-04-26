@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}403 — RifOs{% endblock %}
+{% block content %}
+<div style="min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;flex-direction:column;gap:1.5rem">
+  <div style="font-family:'Orbitron',sans-serif;font-size:5rem;font-weight:900;color:var(--text-dim);opacity:.2">403</div>
+  <div style="font-family:'Orbitron',sans-serif;font-size:.9rem;letter-spacing:3px;color:var(--red)">ACCESO DENEGADO</div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--text-dim);letter-spacing:1px">No tienes permiso para ver esta página.</div>
+  <a href="/" class="btn btn-ghost">← VOLVER AL INICIO</a>
+</div>
+{% endblock %}

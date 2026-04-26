@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}RifOs — Nueva Rifa{% endblock %}
+{% block extra_head %}
+<style>
+.form-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem}
+.form-box{width:100%;max-width:500px;animation:fadeIn .4s ease both}
+.form-box h1{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:900;color:var(--neon-blue);letter-spacing:4px;text-align:center;margin-bottom:2rem;text-shadow:0 0 20px var(--neon-blue)}
+.form-panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:2rem;position:relative;overflow:hidden}
+.form-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--neon-blue),transparent)}
+.btn-submit{width:100%;justify-content:center;padding:.78rem;font-size:.9rem;border:1px solid var(--neon-blue);color:var(--neon-blue);background:transparent;border-radius:4px;margin-top:.3rem;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:3px}
+.btn-submit:hover{background:rgba(0,212,255,.1);box-shadow:0 0 25px rgba(0,212,255,.2)}
+.hint{font-family:'Share Tech Mono',monospace;font-size:.63rem;color:var(--text-dim);margin-top:.3rem;letter-spacing:1px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="form-wrap">
+  <div class="form-box">
+    <h1>🎟️ NUEVA RIFA</h1>
+    <div class="form-panel">
+      {% if error %}<div class="error-msg">⚠ {{ error }}</div>{% endif %}
+      <form method="POST">
+        <div class="form-group">
+          <label>Título de la rifa *</label>
+          <input type="text" name="titulo" placeholder="Ej: Gran Rifa de Navidad" required>
+        </div>
+        <div class="form-group">
+          <label>Premio</label>
+          <input type="text" name="premio" placeholder="Ej: iPhone 15 Pro">
+        </div>
+        <div class="form-group">
+          <label>Valor por número ($)</label>
+          <input type="number" name="valor" value="10000" min="0" required>
+          <div class="hint">Precio que paga cada participante por número</div>
+        </div>
+        <div class="form-group" style="margin-bottom:.3rem">
+          <label>Fecha del sorteo</label>
+          <input type="text" name="fecha" placeholder="Ej: 31 de Diciembre 2025">
+        </div>
+        <button type="submit" class="btn-submit">CREAR RIFA →</button>
+      </form>
+    </div>
+    <div style="text-align:center;margin-top:1rem">
+      <a href="{{ url_for('dashboard') }}" class="btn btn-ghost" style="font-size:.75rem">&larr; CANCELAR</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
