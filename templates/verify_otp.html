@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}RifOs — Verificar código{% endblock %}
+{% block extra_head %}
+<style>
+.verify-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem}
+.verify-box{width:100%;max-width:420px;animation:fadeIn .4s ease both}
+.verify-header{text-align:center;margin-bottom:2rem}
+.verify-header .icon{font-size:2.5rem;display:block;margin-bottom:.8rem;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{filter:drop-shadow(0 0 8px rgba(0,212,255,.4))}50%{filter:drop-shadow(0 0 20px rgba(0,212,255,.8))}}
+.verify-header h1{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:900;color:var(--neon-blue);letter-spacing:4px;text-shadow:0 0 20px var(--neon-blue)}
+.verify-header p{font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--text-dim);letter-spacing:1px;margin-top:.5rem;line-height:1.6}
+.verify-header .email-badge{display:inline-block;background:rgba(0,212,255,.06);border:1px solid rgba(0,212,255,.2);border-radius:4px;padding:.25rem .7rem;color:var(--neon-cyan);font-family:'Share Tech Mono',monospace;font-size:.75rem;margin-top:.4rem;letter-spacing:1px}
+.verify-panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:2rem;position:relative;overflow:hidden}
+.verify-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--neon-blue),transparent)}
+
+/* OTP input boxes */
+.otp-row{display:flex;gap:.5rem;justify-content:center;margin:1.5rem 0}
+.otp-digit{width:48px;height:56px;background:rgba(13,19,32,.9);border:1px solid var(--border);color:var(--text-bright);font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:900;text-align:center;border-radius:6px;outline:none;transition:all .2s;caret-color:transparent}
+.otp-digit:focus{border-color:var(--neon-blue);box-shadow:0 0 15px rgba(0,212,255,.2);background:rgba(0,40,80,.25)}
+.otp-digit.filled{border-color:rgba(0,212,255,.5);color:var(--neon-blue)}
+
+.btn-submit{width:100%;justify-content:center;padding:.78rem;border:1px solid var(--neon-blue);color:var(--neon-blue);background:transparent;border-radius:4px;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:3px;font-size:.9rem}
+.btn-submit:hover{background:rgba(0,212,255,.1);box-shadow:0 0 25px rgba(0,212,255,.2)}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed}
+
+.resend-row{text-align:center;margin-top:1rem;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--text-dim);letter-spacing:1px}
+.resend-btn{background:none;border:none;color:var(--neon-cyan);font-family:'Share Tech Mono',monospace;font-size:.7rem;letter-spacing:1px;cursor:pointer;padding:0;transition:opacity .2s}
+.resend-btn:disabled{opacity:.4;cursor:not-allowed}
+#countdown{color:var(--text-dim)}
+
+/* Dev mode banner */
+.dev-banner{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.3);border-radius:6px;padding:.8rem 1rem;margin-bottom:1rem;text-align:center}
+.dev-banner .dev-label{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--yellow);letter-spacing:2px;margin-bottom:.4rem}
+.dev-banner .dev-code{font-family:'Orbitron',sans-serif;font-size:1.8rem;font-weight:900;color:var(--yellow);letter-spacing:8px;text-shadow:0 0 15px rgba(255,215,0,.4)}
+
+.timer-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin-bottom:1.2rem}
+.timer-fill{height:100%;background:linear-gradient(90deg,var(--neon-blue),var(--neon-cyan));border-radius:2px;transition:width 1s linear}
+</style>
+{% endblock %}
+{% block content %}
+<div class="verify-wrap">
+  <div class="verify-box">
+    <div class="verify-header">
+      <span class="icon">✉️</span>
+      <h1>VERIFICAR CÓDIGO</h1>
+      <p>Enviamos un código de 6 dígitos a</p>
+      <div class="email-badge">{{ email }}</div>
+    </div>
+
+    <div class="verify-panel">
+      {% if dev_otp %}
+      <div class="dev-banner">
+        <div class="dev-label">⚠ MODO DEV — SIN SMTP CONFIGURADO</div>
+        <div class="dev-code">{{ dev_otp }}</div>
+        <div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--text-dim);margin-top:.4rem;letter-spacing:1px">Configura SMTP_USER y SMTP_PASS para enviar por email</div>
+      </div>
+      {% endif %}
+
+      {% if error %}<div class="error-msg">⚠ {{ error }}</div>{% endif %}
+      {% if success %}<div class="success-msg">✓ {{ success }}</div>{% endif %}
+
+      <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+
+      <form method="POST" id="otpForm">
+        <input type="hidden" name="action" value="verify">
+        <input type="hidden" name="code" id="hiddenCode">
+
+        <div class="otp-row" id="otpRow">
+          {% for i in range(6) %}
+          <input type="text" class="otp-digit" maxlength="1" inputmode="numeric" pattern="[0-9]" autocomplete="one-time-code" data-index="{{ i }}">
+          {% endfor %}
+        </div>
+
+        <button type="submit" class="btn-submit" id="submitBtn" disabled>VERIFICAR →</button>
+      </form>
+
+      <div class="resend-row">
+        ¿No llegó? &nbsp;
+        <form method="POST" style="display:inline" id="resendForm">
+          <input type="hidden" name="action" value="resend">
+          <button type="submit" class="resend-btn" id="resendBtn" disabled>REENVIAR <span id="countdown">(60s)</span></button>
+        </form>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:1rem">
+      <a href="{{ url_for('login' if purpose == 'login' else 'register') }}" class="btn btn-ghost" style="font-size:.72rem">&larr; VOLVER</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+// OTP input behavior
+const digits  = Array.from(document.querySelectorAll('.otp-digit'));
+const hidden  = document.getElementById('hiddenCode');
+const submit  = document.getElementById('submitBtn');
+const tfill   = document.getElementById('timerFill');
+
+digits.forEach((d, i) => {
+  d.addEventListener('input', e => {
+    const v = e.target.value.replace(/\D/g,'');
+    e.target.value = v.slice(-1);
+    e.target.classList.toggle('filled', !!e.target.value);
+    if (v && i < 5) digits[i+1].focus();
+    updateHidden();
+  });
+  d.addEventListener('keydown', e => {
+    if (e.key==='Backspace' && !e.target.value && i > 0) { digits[i-1].focus(); digits[i-1].value=''; digits[i-1].classList.remove('filled'); updateHidden(); }
+    if (e.key==='ArrowLeft' && i > 0) digits[i-1].focus();
+    if (e.key==='ArrowRight' && i < 5) digits[i+1].focus();
+  });
+  d.addEventListener('paste', e => {
+    e.preventDefault();
+    const text = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+    text.split('').forEach((ch, j) => { if (digits[j]) { digits[j].value=ch; digits[j].classList.add('filled'); }});
+    if (digits[text.length-1]) digits[Math.min(text.length,5)].focus();
+    updateHidden();
+  });
+});
+
+function updateHidden() {
+  const code = digits.map(d=>d.value).join('');
+  hidden.value = code;
+  submit.disabled = code.length !== 6;
+}
+
+// Focus first digit on load
+digits[0].focus();
+
+// Timer bar (10 min = 600s)
+let remaining = 600;
+function tick() {
+  tfill.style.width = (remaining/600*100) + '%';
+  if (remaining <= 0) { tfill.style.background = 'var(--red)'; return; }
+  remaining--;
+  setTimeout(tick, 1000);
+}
+tick();
+
+// Resend countdown (60s)
+let cd = 60;
+const cdEl = document.getElementById('countdown');
+const rbtn = document.getElementById('resendBtn');
+function tickCd() {
+  if (cd <= 0) { rbtn.disabled=false; cdEl.textContent=''; return; }
+  cdEl.textContent = `(${cd}s)`;
+  cd--;
+  setTimeout(tickCd, 1000);
+}
+tickCd();
+
+// Auto-submit when all 6 digits filled
+document.getElementById('otpForm').addEventListener('input', () => {
+  const code = digits.map(d=>d.value).join('');
+  if (code.length === 6) setTimeout(() => document.getElementById('otpForm').submit(), 300);
+});
+</script>
+{% endblock %}
