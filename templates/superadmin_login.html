@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}RifOs — Superadmin{% endblock %}
+{% block extra_head %}
+<style>
+.auth-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem}
+.auth-box{width:100%;max-width:380px;animation:fadeIn .4s ease both}
+.auth-panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:2rem;position:relative;overflow:hidden}
+.auth-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.btn-submit{width:100%;padding:.78rem;border:1px solid var(--red);color:var(--red);background:transparent;border-radius:4px;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:3px;font-size:.9rem}
+.btn-submit:hover{background:rgba(255,58,92,.1);box-shadow:0 0 20px rgba(255,58,92,.2)}
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-box">
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:2rem;margin-bottom:.8rem">🔒</div>
+      <h1 style="font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:900;color:var(--red);letter-spacing:4px">SUPERADMIN</h1>
+      <p style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--text-dim);letter-spacing:1px;margin-top:.4rem">acceso restringido</p>
+    </div>
+    <div class="auth-panel">
+      {% if error %}<div class="error-msg">⚠ {{ error }}</div>{% endif %}
+      <form method="POST">
+        <div class="form-group"><label>Email</label><input type="email" name="email" required autocomplete="off"></div>
+        <div class="form-group" style="margin-bottom:.3rem"><label>Contraseña</label><input type="password" name="password" required></div>
+        <button type="submit" class="btn-submit">INGRESAR →</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

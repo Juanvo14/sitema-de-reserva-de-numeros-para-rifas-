@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Reservar — {{ rifa.titulo }}{% endblock %}
+{% block extra_head %}
+<style>
+.reservar-wrap{display:grid;grid-template-columns:1fr 270px;gap:2rem;align-items:start}
+.numeros-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:7px}
+.num-btn{aspect-ratio:1;border-radius:6px;border:1px solid;font-family:'Orbitron',sans-serif;font-size:.68rem;font-weight:700;cursor:pointer;transition:all .2s;background:transparent;display:flex;align-items:center;justify-content:center}
+.num-btn.libre{border-color:rgba(0,255,136,.4);color:var(--green);background:rgba(0,255,136,.03)}
+.num-btn.libre:hover{border-color:var(--green);background:rgba(0,255,136,.12);box-shadow:0 0 14px rgba(0,255,136,.3);transform:scale(1.1);z-index:2}
+.num-btn.reservado{border-color:rgba(255,58,92,.4);color:var(--red);background:rgba(255,58,92,.05);cursor:not-allowed;opacity:.7}
+.num-btn.en_veremos{border-color:rgba(255,215,0,.4);color:var(--yellow);background:rgba(255,215,0,.04);cursor:not-allowed;opacity:.7}
+.num-btn.seleccionado{border-color:var(--neon-blue);color:var(--neon-blue);background:rgba(0,212,255,.12);box-shadow:0 0 14px rgba(0,212,255,.3);transform:scale(1.1);z-index:2}
+.sidebar-reserva{display:flex;flex-direction:column;gap:1.2rem}
+.rifa-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.3rem;position:relative;overflow:hidden}
+.rifa-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--neon-blue),transparent)}
+.rifa-titulo-sm{font-family:'Orbitron',sans-serif;font-size:.88rem;font-weight:900;color:var(--neon-blue);letter-spacing:2px}
+.rifa-valor-sm{font-family:'Orbitron',sans-serif;font-size:1.4rem;font-weight:900;color:var(--neon-cyan);text-shadow:0 0 12px var(--neon-cyan);margin-top:.5rem}
+.sel-panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.2rem;text-align:center}
+.sel-num{font-family:'Orbitron',sans-serif;font-size:3.2rem;font-weight:900;color:var(--neon-blue);text-shadow:0 0 30px var(--neon-blue);line-height:1;transition:all .3s}
+.sel-lbl{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--text-dim);letter-spacing:2px;margin-top:.4rem}
+.sel-none{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--text-dim);letter-spacing:1px;padding:1rem 0}
+#btnReservar{width:100%;justify-content:center;padding:.82rem;border:1px solid var(--neon-blue);color:var(--neon-blue);background:transparent;border-radius:6px;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:3px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:.5rem;font-size:.88rem}
+#btnReservar:enabled:hover{background:rgba(0,212,255,.1);box-shadow:0 0 25px rgba(0,212,255,.2)}
+#btnReservar:disabled{opacity:.4;cursor:not-allowed;border-color:var(--text-dim);color:var(--text-dim)}
+.user-badge{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.15);border-radius:6px;padding:.75rem;font-family:'Share Tech Mono',monospace;font-size:.7rem;line-height:1.8;color:var(--text-dim);letter-spacing:1px}
+.user-badge strong{color:var(--neon-cyan)}
+.leyenda{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:.8rem}
+.ley-item{display:flex;align-items:center;gap:.4rem;font-family:'Share Tech Mono',monospace;font-size:.63rem;color:var(--text-dim);letter-spacing:1px}
+.ley-dot{width:9px;height:9px;border-radius:2px;border:1px solid}
+.ley-dot.libre{border-color:var(--green);background:rgba(0,255,136,.12)}
+.ley-dot.reservado{border-color:var(--red);background:rgba(255,58,92,.12)}
+.ley-dot.en_veremos{border-color:var(--yellow);background:rgba(255,215,0,.08)}
+.ley-dot.sel{border-color:var(--neon-blue);background:rgba(0,212,255,.12)}
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--bg2);border:1px solid var(--neon-blue);border-radius:10px;padding:2rem;width:310px;text-align:center;transform:scale(.95);transition:transform .25s;box-shadow:0 0 40px rgba(0,212,255,.12)}
+.modal-overlay.open .modal-box{transform:scale(1)}
+.modal-big-num{font-family:'Orbitron',sans-serif;font-size:4.5rem;font-weight:900;color:var(--neon-blue);text-shadow:0 0 40px var(--neon-blue);line-height:1;margin:.4rem 0}
+.modal-msg{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--text-dim);letter-spacing:1px;line-height:1.7;margin-bottom:1.4rem}
+.modal-actions{display:flex;gap:.8rem}
+.modal-actions .btn{flex:1;justify-content:center}
+@media(max-width:720px){.reservar-wrap{grid-template-columns:1fr}.numeros-grid{gap:5px}.num-btn{font-size:.58rem}}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>{{ rifa.titulo }}</h1>
+  <p>elige tu número de la suerte</p>
+</div>
+<main>
+  <div class="reservar-wrap">
+    <div>
+      <div class="leyenda">
+        <div class="ley-item"><div class="ley-dot libre"></div>LIBRE</div>
+        <div class="ley-item"><div class="ley-dot reservado"></div>TOMADO</div>
+        <div class="ley-item"><div class="ley-dot en_veremos"></div>EN VEREMOS</div>
+        <div class="ley-item"><div class="ley-dot sel"></div>SELECCIONADO</div>
+      </div>
+      <div class="numeros-grid" id="numGrid">
+        {% for i in range(1,101) %}
+          {% set key = i|string %}
+          {% if key in numeros %}{% set estado = numeros[key].estado %}{% else %}{% set estado = 'libre' %}{% endif %}
+          <button class="num-btn {{ estado }}" data-num="{{ i }}" data-estado="{{ estado }}"
+            {% if estado != 'libre' %}disabled{% endif %}
+            onclick="selectNum({{ i }}, this)">{{ i }}</button>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="sidebar-reserva">
+      <div class="rifa-card">
+        <div class="panel-title">INFO RIFA</div>
+        <div class="rifa-titulo-sm">{{ rifa.titulo }}</div>
+        {% if rifa.premio %}<div style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--text-dim);margin-top:.3rem;letter-spacing:1px">🏆 {{ rifa.premio }}</div>{% endif %}
+        <div class="rifa-valor-sm">${{ "{:,}".format(rifa.valor) }}</div>
+        {% if rifa.fecha %}<div style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--text-dim);margin-top:.3rem;letter-spacing:1px">📅 {{ rifa.fecha }}</div>{% endif %}
+      </div>
+      <div class="user-badge">
+        <strong>{{ nombre }}</strong><br>📞 {{ telefono }}
+      </div>
+      <div class="sel-panel">
+        <div id="selDisplay"><div class="sel-none">— Ningún número<br>seleccionado —</div></div>
+      </div>
+      <button id="btnReservar" disabled onclick="openConfirm()">🎟️ RESERVAR NÚMERO</button>
+    </div>
+  </div>
+</main>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal-box">
+    <div style="font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:3px;color:var(--neon-blue);margin-bottom:.4rem">CONFIRMAR RESERVA</div>
+    <div class="modal-big-num" id="modalNumDisplay">—</div>
+    <div class="modal-msg" id="modalMsgDisplay"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">CANCELAR</button>
+      <button class="btn btn-success" onclick="confirmarReserva()">✓ CONFIRMAR</button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const SLUG = '{{ rifa.slug }}';
+let selectedNum = null;
+
+function selectNum(n, btn) {
+  document.querySelectorAll('.num-btn.seleccionado').forEach(b=>{b.classList.remove('seleccionado');b.classList.add('libre');});
+  if (selectedNum===n) {
+    selectedNum=null;
+    document.getElementById('selDisplay').innerHTML='<div class="sel-none">— Ningún número<br>seleccionado —</div>';
+    document.getElementById('btnReservar').disabled=true;
+    return;
+  }
+  selectedNum=n;
+  btn.classList.remove('libre'); btn.classList.add('seleccionado');
+  document.getElementById('selDisplay').innerHTML=`<div class="sel-num">${String(n).padStart(2,'0')}</div><div class="sel-lbl">NÚMERO SELECCIONADO</div>`;
+  document.getElementById('btnReservar').disabled=false;
+}
+
+function openConfirm() {
+  if (!selectedNum) return;
+  document.getElementById('modalNumDisplay').textContent=String(selectedNum).padStart(2,'0');
+  document.getElementById('modalMsgDisplay').innerHTML=`¿Confirmas la reserva del número <strong style="color:var(--neon-blue)">${selectedNum}</strong>?<br><br>Quedará en estado <strong style="color:var(--yellow)">EN VEREMOS</strong> hasta ser confirmado.`;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeConfirm() { document.getElementById('modal').classList.remove('open'); }
+
+async function confirmarReserva() {
+  if (!selectedNum) return;
+  const res = await fetch(`/api/r/${SLUG}/reservar`,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({numero:selectedNum})});
+  const data = await res.json();
+  closeConfirm();
+  if (res.ok) { showToast(`✓ Número ${selectedNum} reservado`,'ok'); setTimeout(()=>location.reload(),1200); }
+  else { showToast(data.error||'Error al reservar','err'); selectedNum=null; setTimeout(()=>location.reload(),1200); }
+}
+
+document.getElementById('modal').addEventListener('click',function(e){if(e.target===this)closeConfirm();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeConfirm();});
+</script>
+{% endblock %}
