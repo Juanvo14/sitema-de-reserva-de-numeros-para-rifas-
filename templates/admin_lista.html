@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Reservas — {{ rifa.titulo }}{% endblock %}
+{% block extra_head %}
+<style>
+table{width:100%;border-collapse:collapse;font-family:'Rajdhani',sans-serif}
+thead tr{border-bottom:1px solid var(--border)}
+thead th{font-family:'Share Tech Mono',monospace;font-size:.63rem;letter-spacing:2px;color:var(--text-dim);text-align:left;padding:.75rem 1rem;text-transform:uppercase}
+tbody tr{border-bottom:1px solid rgba(26,40,64,.5);transition:background .15s}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody td{padding:.65rem 1rem;font-size:.95rem;font-weight:600}
+.num-cell{font-family:'Orbitron',sans-serif;font-size:1rem;font-weight:900;color:var(--text-bright)}
+.badge{display:inline-flex;align-items:center;padding:.2rem .6rem;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:1px;border:1px solid}
+.badge.reservado{color:var(--red);border-color:rgba(255,58,92,.3);background:rgba(255,58,92,.06)}
+.badge.en_veremos{color:var(--yellow);border-color:rgba(255,215,0,.3);background:rgba(255,215,0,.05)}
+.filters{display:flex;gap:.6rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.filter-btn{font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:1px;padding:.35rem .8rem;border-radius:4px;cursor:pointer;transition:all .2s;background:transparent;border:1px solid var(--border);color:var(--text-dim)}
+.filter-btn:hover,.filter-btn.a-all{border-color:var(--neon-blue);color:var(--neon-blue);background:rgba(0,212,255,.05)}
+.filter-btn.a-res{border-color:var(--red);color:var(--red);background:rgba(255,58,92,.05)}
+.filter-btn.a-ver{border-color:var(--yellow);color:var(--yellow);background:rgba(255,215,0,.04)}
+.empty-state{text-align:center;padding:3rem;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim);letter-spacing:2px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>LISTA DE RESERVAS</h1>
+  <p>{{ rifa.titulo }} · {{ reservas|length }} número(s) tomado(s) · <a href="{{ url_for('admin_rifa', slug=rifa.slug) }}" style="color:var(--neon-blue);text-decoration:none">← volver al panel</a></p>
+</div>
+<main>
+  {% if reservas %}
+  <div class="filters">
+    <button class="filter-btn a-all" onclick="filtrar('todos',this)">TODOS ({{ reservas|length }})</button>
+    <button class="filter-btn" onclick="filtrar('reservado',this)">RESERVADOS ({{ reservas|selectattr('estado','eq','reservado')|list|length }})</button>
+    <button class="filter-btn" onclick="filtrar('en_veremos',this)">EN VEREMOS ({{ reservas|selectattr('estado','eq','en_veremos')|list|length }})</button>
+  </div>
+  <div class="panel" style="overflow-x:auto">
+    <table id="tabla">
+      <thead><tr><th>#</th><th>Número</th><th>Nombre</th><th>Teléfono</th><th>Estado</th><th>Fecha</th></tr></thead>
+      <tbody>
+        {% for r in reservas %}
+        <tr data-estado="{{ r.estado }}">
+          <td style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.68rem">{{ loop.index }}</td>
+          <td class="num-cell">{{ r.numero }}</td>
+          <td>{{ r.nombre }}</td>
+          <td style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim)">{{ r.telefono }}</td>
+          <td><span class="badge {{ r.estado }}">{% if r.estado=='reservado' %}🔴{% else %}🟡{% endif %} {{ r.estado.replace('_',' ') }}</span></td>
+          <td style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--text-dim)">{{ r.fecha }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">📋<br><br>NO HAY RESERVAS AÚN</div>
+  {% endif %}
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+function filtrar(tipo,btn){
+  document.querySelectorAll('.filter-btn').forEach(b=>b.className='filter-btn');
+  btn.className='filter-btn '+(tipo==='todos'?'a-all':tipo==='reservado'?'a-res':'a-ver');
+  document.querySelectorAll('#tabla tbody tr').forEach(r=>{
+    r.style.display=(tipo==='todos'||r.dataset.estado===tipo)?'':'none';
+  });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}RifOs — Error de Pago{% endblock %}
+{% block content %}
+<div style="min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;flex-direction:column;gap:1.5rem">
+  <div style="font-size:3.5rem">⚠️</div>
+  <div style="font-family:'Orbitron',sans-serif;font-size:1rem;letter-spacing:3px;color:var(--yellow)">PAGO NO COMPLETADO</div>
+  <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text-dim);max-width:420px;line-height:1.6">{{ msg }}</div>
+  <div style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
+    <a href="{{ url_for('precios') }}" class="btn btn-primary">INTENTAR DE NUEVO</a>
+    <a href="{{ url_for('dashboard') }}" class="btn btn-ghost">IR AL PANEL</a>
+  </div>
+</div>
+{% endblock %}

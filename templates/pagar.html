@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}RifOs — Solicitar Plan {{ plan.nombre }}{% endblock %}
+{% block extra_head %}
+<style>
+.pagar-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem}
+.pagar-box{width:100%;max-width:580px;animation:fadeIn .4s ease both}
+.plan-hero{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:2rem;text-align:center;margin-bottom:1.5rem;position:relative;overflow:hidden}
+.plan-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,{{ plan.color }},transparent)}
+.plan-precio{font-family:'Orbitron',sans-serif;font-size:2.8rem;font-weight:900}
+.steps{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1.5rem;counter-reset:step}
+.step{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1rem 1.2rem;display:flex;align-items:flex-start;gap:1rem;counter-increment:step}
+.step-num{font-family:'Orbitron',sans-serif;font-size:.85rem;font-weight:900;color:var(--neon-blue);background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.2);border-radius:4px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.step-text{font-family:'Rajdhani',sans-serif;font-size:.95rem;color:var(--text);line-height:1.5}
+.step-text strong{color:var(--neon-cyan)}
+.payment-info{background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.2);border-radius:8px;padding:1.2rem;margin-bottom:1.5rem}
+.payment-row{display:flex;align-items:center;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid rgba(26,40,64,.5)}
+.payment-row:last-child{border-bottom:none}
+.payment-label{font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--text-dim);letter-spacing:1px}
+.payment-value{font-family:'Share Tech Mono',monospace;font-size:.78rem;color:var(--green);letter-spacing:1px;font-weight:700}
+.copy-btn{background:none;border:1px solid rgba(0,255,136,.3);color:var(--green);font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:1px;padding:.15rem .5rem;border-radius:3px;cursor:pointer;transition:all .2s}
+.copy-btn:hover{background:rgba(0,255,136,.1)}
+.form-panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:2rem;position:relative;overflow:hidden}
+.form-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--neon-blue),transparent)}
+.btn-submit{width:100%;padding:.82rem;border:1px solid var(--neon-blue);color:var(--neon-blue);background:transparent;border-radius:4px;cursor:pointer;transition:all .2s;font-family:'Rajdhani',sans-serif;font-weight:700;letter-spacing:3px;font-size:.9rem}
+.btn-submit:hover{background:rgba(0,212,255,.1);box-shadow:0 0 25px rgba(0,212,255,.2)}
+.success-box{background:rgba(0,255,136,.06);border:1px solid rgba(0,255,136,.25);border-radius:10px;padding:2rem;text-align:center}
+</style>
+{% endblock %}
+{% block content %}
+<div class="pagar-wrap">
+  <div class="pagar-box">
+
+    <div class="plan-hero">
+      <div style="font-size:1.8rem;margin-bottom:.5rem">
+        {% if plan_key == 'basico' %}🎟️{% elif plan_key == 'pro' %}⚡{% else %}🚀{% endif %}
+      </div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:.85rem;letter-spacing:3px;color:{{ plan.color }};margin-bottom:.3rem">PLAN {{ plan.nombre | upper }}</div>
+      <div class="plan-precio" style="color:{{ plan.color }}">${{ "{:,}".format(plan.precio) }}<span style="font-size:.9rem;color:var(--text-dim);font-family:'Rajdhani',sans-serif"> COP/mes</span></div>
+      <div style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--text-dim);margin-top:.5rem;letter-spacing:1px">
+        {% if plan.rifas %}{{ plan.rifas }} rifas activas{% else %}Rifas ilimitadas{% endif %} · 30 días
+      </div>
+    </div>
+
+    {% if success %}
+    <div class="success-box">
+      <div style="font-size:2.5rem;margin-bottom:.8rem">✅</div>
+      <div style="font-family:'Orbitron',sans-serif;font-size:.9rem;letter-spacing:3px;color:var(--green);margin-bottom:.6rem">SOLICITUD ENVIADA</div>
+      <div style="font-family:'Rajdhani',sans-serif;font-size:1rem;color:var(--text-dim);line-height:1.6;margin-bottom:1.2rem">
+        Recibimos tu solicitud. El administrador la revisará y activará tu plan en breve.<br>
+        Recibirás un email en <strong style="color:var(--neon-cyan)">{{ session.get('user_email','tu correo') }}</strong> cuando esté activo.
+      </div>
+      <a href="{{ url_for('dashboard') }}" class="btn btn-success">IR A MI PANEL →</a>
+    </div>
+    {% else %}
+
+    <!-- Steps -->
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Realiza el pago a uno de los datos bancarios de abajo por el valor de <strong>${{ "{:,}".format(plan.precio) }} COP</strong>.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Toma una captura o foto del comprobante de pago.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Pega el número de referencia o describe el comprobante en el formulario de abajo y envía la solicitud.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-text">El administrador revisará tu pago y activará tu plan. <strong>Recibirás un email de confirmación.</strong></div>
+      </div>
+    </div>
+
+    <!-- Payment info -->
+    <div class="payment-info">
+      <div style="font-family:'Orbitron',sans-serif;font-size:.68rem;letter-spacing:2px;color:var(--green);margin-bottom:.8rem">DATOS DE PAGO</div>
+      <div class="payment-row">
+        <span class="payment-label">NEQUI</span>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <span class="payment-value" id="nequi">3001234567</span>
+          <button class="copy-btn" onclick="copyText('nequi')">COPIAR</button>
+        </div>
+      </div>
+      <div class="payment-row">
+        <span class="payment-label">DAVIPLATA</span>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <span class="payment-value" id="daviplata">3001234567</span>
+          <button class="copy-btn" onclick="copyText('daviplata')">COPIAR</button>
+        </div>
+      </div>
+      <div class="payment-row">
+        <span class="payment-label">BANCO</span>
+        <span class="payment-value">Bancolombia</span>
+      </div>
+      <div class="payment-row">
+        <span class="payment-label">TIPO DE CUENTA</span>
+        <span class="payment-value">Ahorros</span>
+      </div>
+      <div class="payment-row">
+        <span class="payment-label">NÚMERO DE CUENTA</span>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <span class="payment-value" id="cuenta">123-456789-00</span>
+          <button class="copy-btn" onclick="copyText('cuenta')">COPIAR</button>
+        </div>
+      </div>
+      <div class="payment-row">
+        <span class="payment-label">A NOMBRE DE</span>
+        <span class="payment-value">RIFOS SAS</span>
+      </div>
+      <div class="payment-row">
+        <span class="payment-label">VALOR EXACTO</span>
+        <span class="payment-value" style="color:var(--yellow)">${{ "{:,}".format(plan.precio) }} COP</span>
+      </div>
+    </div>
+
+    <!-- Form -->
+    <div class="form-panel">
+      {% if error %}<div class="error-msg">⚠ {{ error }}</div>{% endif %}
+      <div style="font-family:'Orbitron',sans-serif;font-size:.72rem;letter-spacing:2px;color:var(--neon-blue);margin-bottom:1.2rem">CONFIRMAR SOLICITUD</div>
+      <form method="POST">
+        <div class="form-group">
+          <label>Número de referencia / comprobante</label>
+          <input type="text" name="comprobante" placeholder="Ej: 1234567890 o captura Nequi del 01/06/2025" required>
+        </div>
+        <div class="form-group" style="margin-bottom:.5rem">
+          <label>Notas adicionales (opcional)</label>
+          <input type="text" name="notas" placeholder="Ej: Pagué por Nequi a las 3pm">
+        </div>
+        <button type="submit" class="btn-submit">ENVIAR SOLICITUD →</button>
+      </form>
+    </div>
+
+    <div style="text-align:center;margin-top:1rem">
+      <a href="{{ url_for('precios') }}" class="btn btn-ghost" style="font-size:.72rem">← VOLVER A PLANES</a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function copyText(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => showToast('Copiado ✓', 'ok'));
+}
+</script>
+{% endblock %}
