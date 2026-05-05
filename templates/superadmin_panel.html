@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}RifOs — Panel Superadmin{% endblock %}
+{% block extra_head %}
+<style>
+.sa-wrap{max-width:1100px;margin:0 auto}
+.sol-card{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:1.3rem;margin-bottom:1rem;display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center;transition:border-color .2s}
+.sol-card.pendiente{border-left:3px solid var(--yellow)}
+.sol-card.aprobada{border-left:3px solid var(--green);opacity:.7}
+.sol-card.rechazada{border-left:3px solid var(--red);opacity:.6}
+.sol-user{font-family:'Orbitron',sans-serif;font-size:.82rem;font-weight:900;color:var(--text-bright);letter-spacing:1px}
+.sol-email{font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--neon-cyan);letter-spacing:1px;margin-top:.2rem}
+.sol-plan{display:inline-block;font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:2px;padding:.2rem .6rem;border-radius:3px;margin-top:.4rem;border:1px solid}
+.sol-meta{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--text-dim);letter-spacing:1px;margin-top:.4rem;line-height:1.6}
+.sol-comprobante{background:rgba(0,0,0,.3);border-radius:4px;padding:.5rem .7rem;font-family:'Share Tech Mono',monospace;font-size:.7rem;color:var(--text);margin-top:.5rem;letter-spacing:1px}
+.sol-actions{display:flex;flex-direction:column;gap:.5rem;flex-shrink:0}
+.estado-badge{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:2px;padding:.2rem .6rem;border-radius:3px;text-align:center}
+.empty{text-align:center;padding:3rem;font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text-dim);letter-spacing:2px}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>PANEL SUPERADMIN</h1>
+  <p>gestión de solicitudes y usuarios · <a href="{{ url_for('superadmin_users') }}" style="color:var(--neon-blue);text-decoration:none">ver usuarios</a> · <a href="{{ url_for('superadmin_logout') }}" style="color:var(--red);text-decoration:none">salir</a></p>
+</div>
+<main>
+  <div class="sa-wrap">
+    <div class="stats-row" style="margin-bottom:2rem">
+      <div class="stat-card"><div class="val" style="color:var(--neon-blue)">{{ total_users }}</div><div class="lbl">Usuarios</div></div>
+      <div class="stat-card"><div class="val" style="color:var(--green)">{{ total_activos }}</div><div class="lbl">Activos</div></div>
+      <div class="stat-card"><div class="val" style="color:var(--yellow)">{{ total_pendientes }}</div><div class="lbl">Pendientes</div></div>
+      <div class="stat-card"><div class="val" style="color:var(--neon-cyan)">{{ total_rifas }}</div><div class="lbl">Rifas totales</div></div>
+    </div>
+
+    <div class="panel-title">SOLICITUDES DE PAGO</div>
+
+    {% if solicitudes %}
+      {% for sol in solicitudes %}
+      <div class="sol-card {{ sol.estado }}" id="sol-{{ sol.id }}">
+        <div>
+          <div class="sol-user">{{ sol.user_name }}</div>
+          <div class="sol-email">{{ sol.user_email }}</div>
+          {% set plan = planes[sol.plan] %}
+          <span class="sol-plan" style="color:{{ plan.color }};border-color:{{ plan.color }}20;background:{{ plan.color }}10">
+            {{ plan.nombre | upper }} — ${{ "{:,}".format(plan.precio) }} COP
+          </span>
+          <div class="sol-meta">
+            Solicitado: {{ sol.created_at[:16].replace('T',' ') }}
+            {% if sol.updated_at %} · Actualizado: {{ sol.updated_at[:16].replace('T',' ') }}{% endif %}
+          </div>
+          {% if sol.comprobante %}
+          <div class="sol-comprobante">📎 {{ sol.comprobante }}</div>
+          {% endif %}
+          {% if sol.notas %}
+          <div class="sol-comprobante" style="margin-top:.3rem;color:var(--text-dim)">💬 {{ sol.notas }}</div>
+          {% endif %}
+        </div>
+        <div class="sol-actions">
+          {% if sol.estado == 'pendiente' %}
+            <button class="btn btn-success" style="font-size:.72rem" onclick="activar({{ sol.id }})">✓ ACTIVAR</button>
+            <button class="btn btn-danger" style="font-size:.72rem" onclick="rechazar({{ sol.id }})">✗ RECHAZAR</button>
+          {% else %}
+            <div class="estado-badge" style="color:{% if sol.estado=='aprobada' %}var(--green){% else %}var(--red){% endif %};border:1px solid {% if sol.estado=='aprobada' %}rgba(0,255,136,.3){% else %}rgba(255,58,92,.3){% endif %};background:{% if sol.estado=='aprobada' %}rgba(0,255,136,.06){% else %}rgba(255,58,92,.06){% endif %}">
+              {{ sol.estado | upper }}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">📋<br><br>NO HAY SOLICITUDES AÚN</div>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+async function activar(id) {
+  if (!confirm('¿Activar el plan de este usuario?')) return;
+  const res = await fetch(`/superadmin/activar/${id}`, {method:'POST', headers:{'Content-Type':'application/json'}});
+  if (res.ok) {
+    showToast('Plan activado ✓','ok');
+    setTimeout(()=>location.reload(), 900);
+  } else showToast('Error al activar','err');
+}
+
+async function rechazar(id) {
+  const motivo = prompt('Motivo del rechazo (opcional):') || 'Solicitud rechazada.';
+  const res = await fetch(`/superadmin/rechazar/${id}`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({motivo})
+  });
+  if (res.ok) {
+    showToast('Solicitud rechazada','ok');
+    setTimeout(()=>location.reload(), 900);
+  } else showToast('Error','err');
+}
+</script>
+{% endblock %}

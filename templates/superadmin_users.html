@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}RifOs — Usuarios Superadmin{% endblock %}
+{% block extra_head %}
+<style>
+table{width:100%;border-collapse:collapse}
+thead th{font-family:'Share Tech Mono',monospace;font-size:.62rem;letter-spacing:2px;color:var(--text-dim);text-align:left;padding:.7rem 1rem;border-bottom:1px solid var(--border);text-transform:uppercase}
+tbody tr{border-bottom:1px solid rgba(26,40,64,.4);transition:background .15s}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+tbody td{padding:.65rem 1rem;font-size:.92rem;font-weight:600}
+.badge{display:inline-flex;padding:.2rem .6rem;border-radius:3px;font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:1px;border:1px solid}
+.plan-select{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:.3rem .5rem;border-radius:4px;cursor:pointer}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>USUARIOS</h1>
+  <p>{{ users|length }} usuarios registrados · <a href="{{ url_for('superadmin_panel') }}" style="color:var(--neon-blue);text-decoration:none">← solicitudes</a></p>
+</div>
+<main>
+  <div class="panel" style="overflow-x:auto">
+    <table>
+      <thead>
+        <tr><th>Nombre</th><th>Email</th><th>Plan</th><th>Estado</th><th>Vence</th><th>Rifas</th><th>Activar</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td style="color:var(--text-bright)">{{ u.name }}</td>
+          <td style="font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--neon-cyan)">{{ u.email }}</td>
+          <td>
+            {% if u.plan != '—' %}
+              <span class="badge" style="color:{{ planes[u.plan].color }};border-color:{{ planes[u.plan].color }}30">{{ u.plan | upper }}</span>
+            {% else %}
+              <span style="color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.68rem">—</span>
+            {% endif %}
+          </td>
+          <td>
+            <span class="badge" style="color:{% if u.sub_estado=='activa' %}var(--green){% elif u.sub_estado=='trial' %}var(--neon-blue){% else %}var(--red){% endif %};border-color:rgba(100,100,100,.3)">
+              {{ u.sub_estado | upper }}
+            </span>
+          </td>
+          <td style="font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--text-dim)">
+            {{ u.fecha_vence[:10] if u.fecha_vence else '—' }}
+          </td>
+          <td style="font-family:'Orbitron',monospace;font-size:.85rem;color:var(--neon-cyan)">{{ u.total_rifas }}</td>
+          <td>
+            <div style="display:flex;align-items:center;gap:.4rem">
+              <select class="plan-select" id="plan-{{ u.id }}">
+                {% for key, p in planes.items() %}
+                <option value="{{ key }}" {% if u.plan==key %}selected{% endif %}>{{ p.nombre }}</option>
+                {% endfor %}
+              </select>
+              <button class="btn btn-success" style="font-size:.65rem;padding:.3rem .6rem" onclick="activarDirecto({{ u.id }})">ACTIVAR</button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</main>
+{% endblock %}
+{% block scripts %}
+<script>
+async function activarDirecto(userId) {
+  const plan = document.getElementById('plan-'+userId).value;
+  if (!confirm(`¿Activar plan ${plan} para este usuario?`)) return;
+  const res = await fetch(`/superadmin/activar-directo/${userId}`, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({plan})
+  });
+  if (res.ok) { showToast('Plan activado ✓','ok'); setTimeout(()=>location.reload(),900); }
+  else showToast('Error','err');
+}
+</script>
+{% endblock %}
